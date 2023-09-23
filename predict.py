@@ -158,13 +158,13 @@ class Predictor(BasePredictor):
         start = time.time()
         self.tuned_model = False
 
-        print("Loading safety checker...")
-        if not os.path.exists(SAFETY_CACHE):
-            download_weights(SAFETY_URL, SAFETY_CACHE)
-        self.safety_checker = StableDiffusionSafetyChecker.from_pretrained(
-            SAFETY_CACHE, torch_dtype=torch.float16
-        ).to("cuda")
-        self.feature_extractor = CLIPImageProcessor.from_pretrained(FEATURE_EXTRACTOR)
+        # print("Loading safety checker...")
+        # if not os.path.exists(SAFETY_CACHE):
+        #     download_weights(SAFETY_URL, SAFETY_CACHE)
+        # self.safety_checker = StableDiffusionSafetyChecker.from_pretrained(
+        #     SAFETY_CACHE, torch_dtype=torch.float16
+        # ).to("cuda")
+        # self.feature_extractor = CLIPImageProcessor.from_pretrained(FEATURE_EXTRACTOR)
 
         if not os.path.exists(SDXL_MODEL_CACHE):
             download_weights(SDXL_URL, SDXL_MODEL_CACHE)
@@ -232,16 +232,16 @@ class Predictor(BasePredictor):
         shutil.copyfile(path, "/tmp/image.png")
         return load_image("/tmp/image.png").convert("RGB")
 
-    def run_safety_checker(self, image):
-        safety_checker_input = self.feature_extractor(image, return_tensors="pt").to(
-            "cuda"
-        )
-        np_image = [np.array(val) for val in image]
-        image, has_nsfw_concept = self.safety_checker(
-            images=np_image,
-            clip_input=safety_checker_input.pixel_values.to(torch.float16),
-        )
-        return image, has_nsfw_concept
+    # def run_safety_checker(self, image):
+    #     safety_checker_input = self.feature_extractor(image, return_tensors="pt").to(
+    #         "cuda"
+    #     )
+    #     np_image = [np.array(val) for val in image]
+    #     image, has_nsfw_concept = self.safety_checker(
+    #         images=np_image,
+    #         clip_input=safety_checker_input.pixel_values.to(torch.float16),
+    #     )
+    #     return image, has_nsfw_concept
 
     @torch.inference_mode()
     def predict(
@@ -396,13 +396,13 @@ class Predictor(BasePredictor):
             pipe.watermark = watermark_cache
             self.refiner.watermark = watermark_cache
 
-        _, has_nsfw_content = self.run_safety_checker(output.images)
+        # _, has_nsfw_content = self.run_safety_checker(output.images)
 
         output_paths = []
-        for i, nsfw in enumerate(has_nsfw_content):
-            if nsfw:
-                print(f"NSFW content detected in image {i}")
-                continue
+        for i, nsfw in enumerate(output.images):
+            # if nsfw:
+            #     print(f"NSFW content detected in image {i}")
+            #     continue
             output_path = f"/tmp/out-{i}.png"
             output.images[i].save(output_path)
             output_paths.append(Path(output_path))
